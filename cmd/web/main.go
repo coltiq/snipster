@@ -12,7 +12,7 @@ import (
 type apiConfig struct {
 	infoLog  *log.Logger
 	errorLog *log.Logger
-}
+} // Handler Dependencies
 
 func main() {
 	addr := flag.String("addr", ":8080", "HTTP network address") // Command-line flag for server port
@@ -26,23 +26,12 @@ func main() {
 		errorLog: errorLog,
 	} // Config struct containing dependencies
 
-	mux := http.NewServeMux()
-
-	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./assets/static/")})
-	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer)) // Server static files
-
-	mux.HandleFunc("GET /{$}", apiCfg.home)                            // Restrict this route to exact matches on / only
-	mux.HandleFunc("GET /snippets/view/{id}", apiCfg.snippetsView)     // Display a specific snippet w/ {id} wildcard
-	mux.HandleFunc("GET /snippets/create", apiCfg.snippetsCreate)      // Disply a form to create a new snippet w/ GET restriction
-	mux.HandleFunc("POST /snippets/create", apiCfg.snippetsCreatePost) // Save a new snippet w/ POST restriction
-
-	// Server Config
 	srv := &http.Server{
 		Addr:              *addr,
 		ErrorLog:          errorLog,
-		Handler:           mux,
+		Handler:           apiCfg.routes(),
 		ReadHeaderTimeout: 10 * time.Second,
-	}
+	} // Server Config
 
 	infoLog.Printf("Starting server on %s", *addr)
 	err := srv.ListenAndServe()
