@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+type apiConfig struct {
+	infoLog  *log.Logger
+	errorLog *log.Logger
+}
+
 func main() {
 	addr := flag.String("addr", ":8080", "HTTP network address") // Command-line flag for server port
 	flag.Parse()
@@ -16,15 +21,20 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.LUTC|log.Ltime)                  // Log information (ie "Serving Starting...")
 	errorLog := log.New(os.Stderr, "ERROR\t", log.LUTC|log.Ltime|log.Lshortfile) // Log Errors
 
+	apiCfg := &apiConfig{
+		infoLog:  infoLog,
+		errorLog: errorLog,
+	} // Config struct containing dependencies
+
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./assets/static/")})
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer)) // Server static files
 
-	mux.HandleFunc("GET /{$}", home)                            // Restrict this route to exact matches on / only
-	mux.HandleFunc("GET /snippets/view/{id}", snippetsView)     // Display a specific snippet w/ {id} wildcard
-	mux.HandleFunc("GET /snippets/create", snippetsCreate)      // Disply a form to create a new snippet w/ GET restriction
-	mux.HandleFunc("POST /snippets/create", snippetsCreatePost) // Save a new snippet w/ POST restriction
+	mux.HandleFunc("GET /{$}", apiCfg.home)                            // Restrict this route to exact matches on / only
+	mux.HandleFunc("GET /snippets/view/{id}", apiCfg.snippetsView)     // Display a specific snippet w/ {id} wildcard
+	mux.HandleFunc("GET /snippets/create", apiCfg.snippetsCreate)      // Disply a form to create a new snippet w/ GET restriction
+	mux.HandleFunc("POST /snippets/create", apiCfg.snippetsCreatePost) // Save a new snippet w/ POST restriction
 
 	// Server Config
 	srv := &http.Server{
