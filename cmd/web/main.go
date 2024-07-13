@@ -9,6 +9,7 @@ import (
 
 func main() {
 	addr := flag.String("addr", ":8080", "HTTP network address") // Command-line flag for server port
+	flag.Parse()
 
 	mux := http.NewServeMux()
 
