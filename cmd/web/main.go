@@ -4,12 +4,16 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
 func main() {
 	addr := flag.String("addr", ":8080", "HTTP network address") // Command-line flag for server port
 	flag.Parse()
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.LUTC|log.Ltime)                  // Log information (ie "Serving Starting...")
+	errorLog := log.New(os.Stderr, "ERROR\t", log.LUTC|log.Ltime|log.Lshortfile) // Log Errors
 
 	mux := http.NewServeMux()
 
@@ -21,9 +25,9 @@ func main() {
 	mux.HandleFunc("GET /snippets/create", snippetsCreate)      // Disply a form to create a new snippet w/ GET restriction
 	mux.HandleFunc("POST /snippets/create", snippetsCreatePost) // Save a new snippet w/ POST restriction
 
-	log.Printf("Starting server on %s", *addr)
+	infoLog.Printf("Starting server on %s", *addr)
 	err := http.ListenAndServe(*addr, mux)
-	log.Fatal(err)
+	errorLog.Fatal(err)
 }
 
 type neuteredFileSystem struct {
