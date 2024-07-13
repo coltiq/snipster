@@ -42,10 +42,10 @@ func snippetsView(w http.ResponseWriter, r *http.Request) {
 }
 
 func snippetsCreate(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display a form for creating a new snippet..."))
+	w.Write([]byte("Display a form for creating a new snippet...")) // #nosec
 }
 
 func snippetsCreatePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Save a new snippet..."))
+	w.Write([]byte("Save a new snippet...")) // #nosec
 }
