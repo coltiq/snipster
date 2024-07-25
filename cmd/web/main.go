@@ -1,38 +1,63 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/coltiq/snipster/internal/models"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-type apiConfig struct {
-	infoLog  *log.Logger
-	errorLog *log.Logger
+type application struct {
+	logger   *slog.Logger
+	snippets *models.SnippetModel
 } // Handler Dependencies
 
 func main() {
 	addr := flag.String("addr", ":8080", "HTTP network address") // Command-line flag for server port
+	dsn := flag.String("dsn", "web:colt@/snippetbox?parseTime=true", "MySQL data source name")
 	flag.Parse()
 
-	infoLog := log.New(os.Stdout, "INFO\t", log.LUTC|log.Ltime)                  // Log information (ie "Serving Starting...")
-	errorLog := log.New(os.Stderr, "ERROR\t", log.LUTC|log.Ltime|log.Lshortfile) // Log Errors
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	apiCfg := &apiConfig{
-		infoLog:  infoLog,
-		errorLog: errorLog,
+	db, err := openDB(*dsn)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	app := &application{
+		logger: logger,
 	} // Config struct containing dependencies
 
 	srv := &http.Server{
 		Addr:              *addr,
-		ErrorLog:          errorLog,
-		Handler:           apiCfg.routes(),
+		Handler:           app.routes(),
 		ReadHeaderTimeout: 10 * time.Second,
 	} // Server Config
 
-	infoLog.Printf("Starting server on %s", *addr)
-	err := srv.ListenAndServe()
-	errorLog.Fatal(err)
+	logger.Info("starting server", slog.String("addr", *addr))
+	err = srv.ListenAndServe()
+	logger.Error(err.Error())
+	os.Exit(1)
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	return db, nil
 }

@@ -1,22 +1,26 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"net/http"
 	"runtime/debug"
 )
 
-func (cfg *apiConfig) serverError(w http.ResponseWriter, err error) {
-	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-	cfg.errorLog.Output(2, trace) // Allows for outputting where the error originally occured
+func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) {
+	var (
+		method = r.Method
+		uri    = r.URL.RequestURI()
+		trace  = string(debug.Stack())
+	)
 
+	app.logger.Error(err.Error(), slog.Any("method", method), slog.Any("uri", uri), slog.Any("trace", trace))
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
-func (cfg *apiConfig) clientError(w http.ResponseWriter, status int) {
+func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
-func (cfg *apiConfig) notFound(w http.ResponseWriter) {
-	cfg.clientError(w, http.StatusNotFound)
+func (app *application) notFound(w http.ResponseWriter) {
+	app.clientError(w, http.StatusNotFound)
 }

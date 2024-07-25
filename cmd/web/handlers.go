@@ -7,42 +7,42 @@ import (
 	"text/template"
 )
 
-func (cfg *apiConfig) home(w http.ResponseWriter, r *http.Request) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server", "Go")
 
 	files := []string{
-		"./assets/html/base.tmpl",
-		"./assets/html/partials/nav.tmpl",
-		"./assets/html/pages/home.tmpl",
+		"./ui/html/base.tmpl",
+		"./ui/html/partials/nav.tmpl",
+		"./ui/html/pages/home.tmpl",
 	}
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		cfg.serverError(w, err)
+		app.serverError(w, r, err)
 		return
 	}
 
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		cfg.serverError(w, err)
+		app.serverError(w, r, err)
 	}
 }
 
-func (cfg *apiConfig) snippetsView(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetsView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil || id < 1 {
-		cfg.notFound(w)
+		app.notFound(w)
 		return
 	}
 
 	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 }
 
-func (cfg *apiConfig) snippetsCreate(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetsCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Display a form for creating a new snippet...")) // #nosec
 }
 
-func (cfg *apiConfig) snippetsCreatePost(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetsCreatePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Save a new snippet...")) // #nosec
 }
