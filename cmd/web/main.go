@@ -8,18 +8,18 @@ import (
 	"os"
 	"time"
 
-	"github.com/coltiq/snipster/internal/models"
+	"github.com/coltiq/snipster/internal/model"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type application struct {
 	logger   *slog.Logger
-	snippets *models.SnippetModel
+	snippets *model.SnippetModel
 } // Handler Dependencies
 
 func main() {
 	addr := flag.String("addr", ":8080", "HTTP network address") // Command-line flag for server port
-	dsn := flag.String("dsn", "web:colt@/snippetbox?parseTime=true", "MySQL data source name")
+	dsn := flag.String("dsn", "web:colt@/snipster?parseTime=true", "MySQL data source name")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -33,6 +33,7 @@ func main() {
 
 	app := &application{
 		logger: logger,
+		snippets: &model.SnippetModel{DB: db},
 	} // Config struct containing dependencies
 
 	srv := &http.Server{
