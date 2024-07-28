@@ -32,7 +32,7 @@ func main() {
 	defer db.Close()
 
 	app := &application{
-		logger: logger,
+		logger:   logger,
 		snippets: &model.SnippetModel{DB: db},
 	} // Config struct containing dependencies
 
