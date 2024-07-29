@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"text/template"
 	"time"
 
 	"github.com/coltiq/snipster/internal/model"
@@ -13,8 +14,9 @@ import (
 )
 
 type application struct {
-	logger   *slog.Logger
-	snippets *model.SnippetModel
+	logger        *slog.Logger
+	snippets      *model.SnippetModel
+	templateCache map[string]*template.Template
 } // Handler Dependencies
 
 func main() {
@@ -31,9 +33,16 @@ func main() {
 	}
 	defer db.Close()
 
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	app := &application{
-		logger:   logger,
-		snippets: &model.SnippetModel{DB: db},
+		logger:        logger,
+		snippets:      &model.SnippetModel{DB: db},
+		templateCache: templateCache,
 	} // Config struct containing dependencies
 
 	srv := &http.Server{
