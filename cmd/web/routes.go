@@ -3,9 +3,11 @@ package main
 import (
 	"net/http"
 	"path/filepath"
+
+	"github.com/justinas/alice"
 )
 
-func (app *application) routes() *http.ServeMux {
+func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
@@ -16,7 +18,9 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("GET /snippets/create", app.snippetsCreate)      // Disply a form to create a new snippet w/ GET restriction
 	mux.HandleFunc("POST /snippets/create", app.snippetsCreatePost) // Save a new snippet w/ POST restriction
 
-	return mux
+	standard := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
+
+	return standard.Then(mux)
 }
 
 type neuteredFileSystem struct {
