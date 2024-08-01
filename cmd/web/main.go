@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/coltiq/snipster/internal/model"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -17,6 +18,7 @@ type application struct {
 	logger        *slog.Logger
 	snippets      *model.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 } // Handler Dependencies
 
 func main() {
@@ -39,10 +41,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	formDecoder := form.NewDecoder()
+
 	app := &application{
 		logger:        logger,
 		snippets:      &model.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	} // Config struct containing dependencies
 
 	srv := &http.Server{
