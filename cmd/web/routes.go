@@ -13,10 +13,12 @@ func (app *application) routes() http.Handler {
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer)) // Server static files
 
-	mux.HandleFunc("GET /{$}", app.home)                            // Restrict this route to exact matches on / only
-	mux.HandleFunc("GET /snippets/view/{id}", app.snippetsView)     // Display a specific snippet w/ {id} wildcard
-	mux.HandleFunc("GET /snippets/create", app.snippetsCreate)      // Disply a form to create a new snippet w/ GET restriction
-	mux.HandleFunc("POST /snippets/create", app.snippetsCreatePost) // Save a new snippet w/ POST restriction
+	dynamic := alice.New(app.sessionManager.LoadAndSave)
+
+	mux.Handle("GET /{$}", dynamic.ThenFunc(app.home))                            // Restrict this route to exact matches on / only
+	mux.Handle("GET /snippets/view/{id}", dynamic.ThenFunc(app.snippetsView))     // Display a specific snippet w/ {id} wildcard
+	mux.Handle("GET /snippets/create", dynamic.ThenFunc(app.snippetsCreate))      // Disply a form to create a new snippet w/ GET restriction
+	mux.Handle("POST /snippets/create", dynamic.ThenFunc(app.snippetsCreatePost)) // Save a new snippet w/ POST restriction
 
 	standard := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
 
