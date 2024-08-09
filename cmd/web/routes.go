@@ -13,7 +13,7 @@ func (app *application) routes() http.Handler {
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer)) // Server static files
 
-	dynamic := alice.New(app.sessionManager.LoadAndSave)
+	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 	mux.Handle("GET /{$}", dynamic.ThenFunc(app.home))                        // Restrict this route to exact matches on / only
 	mux.Handle("GET /snippets/view/{id}", dynamic.ThenFunc(app.snippetsView)) // Display a specific snippet w/ {id} wildcard
 	mux.Handle("GET /users/signup", dynamic.ThenFunc(app.userSignup))         // Display a form for signing up a new user
